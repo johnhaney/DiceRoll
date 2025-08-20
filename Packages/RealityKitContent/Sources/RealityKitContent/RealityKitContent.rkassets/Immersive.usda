@@ -1,0 +1,267 @@
+#usda 1.0
+(
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+reorder rootPrims = ["Root", "GridMaterial"]
+
+def Xform "Root"
+{
+    reorder nameChildren = ["Sphere_Left", "Sphere_Right", "GridMaterial", "Timeline"]
+    def Sphere "Sphere_Right" (
+        active = true
+        prepend apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </Root/GridMaterial/GridMaterial> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double radius = 0.1
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        float3 xformOp:translate = (0.5, 1.5, -1.5)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def Sphere "Sphere_Left" (
+        active = true
+        prepend apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </Root/GridMaterial/GridMaterial> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double radius = 0.1
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        float3 xformOp:translate = (-0.5, 1.5, -1.5)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def "GridMaterial" (
+        active = true
+        references = @Materials/GridMaterial.usda@
+    )
+    {
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        float3 xformOp:translate = (0, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def Cube "Cube" (
+        active = true
+        prepend apiSchemas = ["MaterialBindingAPI"]
+        customData = {
+            float3 rotationEulerHint = (0.52359873, 0.34906587, 0.6981317)
+        }
+    )
+    {
+        rel material:binding = </Root/Cube/DefaultMaterial>
+        double size = 0.2
+        quatf xformOp:orient = (0.9092553, 0.18214796, 0.24479231, 0.28311405)
+        float3 xformOp:scale = (1, 1, 1)
+        float3 xformOp:translate = (0, 1.2183062, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+        def Material "DefaultMaterial"
+        {
+            token outputs:mtlx:surface.connect = </Root/Cube/DefaultMaterial/PreviewSurface.outputs:out>
+            token outputs:realitykit:vertex
+            token outputs:surface.connect = </Root/Cube/DefaultMaterial/DefaultSurfaceShader.outputs:surface>
+            float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (0, 110.5)
+
+            def Shader "DefaultSurfaceShader" (
+                active = false
+            )
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (1, 1, 1)
+                float inputs:roughness = 0.75
+                token outputs:surface
+            }
+
+            def Shader "PreviewSurface"
+            {
+                uniform token info:id = "ND_UsdPreviewSurface_surfaceshader"
+                color3f inputs:diffuseColor.connect = </Root/Cube/DefaultMaterial/Combine3.outputs:out>
+                float inputs:metallic
+                float inputs:roughness
+                token outputs:out
+                float2 ui:nodegraph:node:pos = (-255, 105)
+            }
+
+            def Shader "Normal"
+            {
+                uniform token info:id = "ND_normal_vector3"
+                float3 outputs:out
+                float2 ui:nodegraph:node:pos = (-939.9961, 145.05078)
+                int ui:nodegraph:node:stackingOrder = 19
+            }
+
+            def Shader "Separate3"
+            {
+                uniform token info:id = "ND_separate3_vector3"
+                float3 inputs:in.connect = </Root/Cube/DefaultMaterial/Normal.outputs:out>
+                float outputs:outx
+                float outputs:outy
+                float outputs:outz
+                float2 ui:nodegraph:node:pos = (-849.1367, 286.3711)
+                int ui:nodegraph:node:stackingOrder = 40
+            }
+
+            def Shader "Combine3"
+            {
+                uniform token info:id = "ND_combine3_color3"
+                float inputs:in1.connect = </Root/Cube/DefaultMaterial/Abs.outputs:out>
+                float inputs:in2.connect = </Root/Cube/DefaultMaterial/Abs_1.outputs:out>
+                float inputs:in3.connect = </Root/Cube/DefaultMaterial/Abs_2.outputs:out>
+                color3f outputs:out
+                float2 ui:nodegraph:node:pos = (-326.9336, 294.9336)
+                int ui:nodegraph:node:stackingOrder = 42
+            }
+
+            def Shader "Abs"
+            {
+                uniform token info:id = "ND_absval_float"
+                float inputs:in.connect = </Root/Cube/DefaultMaterial/Separate3.outputs:outx>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (-573.9414, 175.79688)
+                int ui:nodegraph:node:stackingOrder = 64
+            }
+
+            def Shader "Abs_1"
+            {
+                uniform token info:id = "ND_absval_float"
+                float inputs:in.connect = </Root/Cube/DefaultMaterial/Separate3.outputs:outy>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (-580.08594, 429.5664)
+                int ui:nodegraph:node:stackingOrder = 70
+            }
+
+            def Shader "Abs_2"
+            {
+                uniform token info:id = "ND_absval_float"
+                float inputs:in.connect = </Root/Cube/DefaultMaterial/Separate3.outputs:outz>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (-584.6367, 700.27734)
+                int ui:nodegraph:node:stackingOrder = 76
+            }
+        }
+
+        def RealityKitComponent "RigidBody"
+        {
+            uniform token info:id = "RealityKit.RigidBody"
+
+            def RealityKitStruct "massFrame"
+            {
+                def RealityKitStruct "m_pose"
+                {
+                }
+            }
+
+            def RealityKitStruct "material"
+            {
+            }
+        }
+
+        def RealityKitComponent "InputTarget"
+        {
+            uniform token info:id = "RealityKit.InputTarget"
+        }
+
+        def RealityKitComponent "RCP_BehaviorsContainer"
+        {
+            rel behaviors = </Root/Cube/OnTap>
+            uniform token info:id = "RCP.BehaviorsContainer"
+        }
+
+        def Preliminary_Behavior "OnTap"
+        {
+            rel actions = </Root/Cube/OnTap/Action>
+            uniform bool exclusive
+            rel triggers = </Root/Cube/OnTap/Trigger>
+
+            def Preliminary_Trigger "Trigger"
+            {
+                rel affectedObjects = </Root/Cube>
+                token info:id = "TapGesture"
+            }
+
+            def Preliminary_Action "Action"
+            {
+                rel affectedObjects = None
+                rel animationLibraryKeyOverrideKey = </Root/Cube/OnTap/Trigger>
+                token info:id = "PlayTimeline"
+                int loops = 0
+                int performCount = 1
+                token type = "serial"
+            }
+        }
+    }
+
+    def RealityKitTimeline "Timeline"
+    {
+        def RealityKitTrack "Track"
+        {
+            def RealityKitAction "Add_Force"
+            {
+                string actionKind = "impulse"
+                uniform token info:id = "9A2F1E18-4D5C-4E89-AFC9-35FD9E2498AE"
+                double startTime = 0
+                rel target = </Root/Cube>
+            }
+        }
+    }
+
+    def Cube "Cube_1" (
+        active = true
+        prepend apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </Root/Cube_1/DefaultMaterial>
+        double size = 0.2
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (100, 0.01, 100)
+        float3 xformOp:translate = (0, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+        def Material "DefaultMaterial"
+        {
+            token outputs:mtlx:surface
+            token outputs:realitykit:vertex
+            prepend token outputs:surface.connect = </Root/Cube_1/DefaultMaterial/DefaultSurfaceShader.outputs:surface>
+
+            def Shader "DefaultSurfaceShader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.18968455, 0.545083, 0.4876542) (
+                    colorSpace = "srgb_displayp3"
+                )
+                float inputs:roughness = 0.75
+                token outputs:surface
+            }
+        }
+
+        def RealityKitComponent "RigidBody"
+        {
+            bool gravityEnabled = 0
+            uniform token info:id = "RealityKit.RigidBody"
+            token motionType = "Static"
+
+            def RealityKitStruct "massFrame"
+            {
+                def RealityKitStruct "m_pose"
+                {
+                }
+            }
+
+            def RealityKitStruct "material"
+            {
+            }
+        }
+    }
+}
+
